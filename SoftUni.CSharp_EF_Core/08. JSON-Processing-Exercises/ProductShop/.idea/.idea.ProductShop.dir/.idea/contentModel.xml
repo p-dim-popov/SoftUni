@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ContentModelStore">
+    <e p="C:\Users\pdimp\AppData\Local\JetBrains\Rider2020.1\extResources" t="IncludeRecursive" />
+    <e p="C:\Users\pdimp\AppData\Local\JetBrains\Rider2020.1\resharper-host\Local\Transient\ReSharperHost\v201\SolutionCaches\_.19.00" t="ExcludeRecursive" />
+    <e p="C:\Users\pdimp\AppData\Roaming\JetBrains\Rider2020.1\consoles\db" t="IncludeRecursive" />
+    <e p="C:\Users\pdimp\AppData\Roaming\JetBrains\Rider2020.1\extensions" t="IncludeRecursive" />
+    <e p="D:\Users\pdimp\SoftUni C# EF Core\08. JSON-Processing-Exercises\ProductShop" t="IncludeRecursive">
+      <e p="a.zip" t="Include" />
+      <e p="bin" t="ExcludeRecursive" />
+      <e p="Data" t="Include">
+        <e p="ProductShopContext.cs" t="Include" />
+      </e>
+      <e p="Datasets" t="Include">
+        <e p="categories-products.json" t="Include" />
+        <e p="categories.json" t="Include" />
+        <e p="categories2.json" t="Include" />
+        <e p="products.json" t="Include" />
+        <e p="users.json" t="Include" />
+      </e>
+      <e p="Models" t="Include">
+        <e p="Category.cs" t="Include" />
+        <e p="CategoryProduct.cs" t="Include" />
+        <e p="Product.cs" t="Include" />
+        <e p="User.cs" t="Include" />
+      </e>
+      <e p="obj" t="ExcludeRecursive">
+        <e p="Debug" t="Include">
+          <e p="netcoreapp2.1" t="Include">
+            <e p="ProductShop.AssemblyInfo.cs" t="Include" />
+          </e>
+        </e>
+      </e>
+      <e p="packages" t="ExcludeRecursive" />
+      <e p="ProductShop.csproj" t="IncludeRecursive" />
+      <e p="ProductShopProfile.cs" t="Include" />
+      <e p="StartUp.cs" t="Include" />
+    </e>
+  </component>
+</project>

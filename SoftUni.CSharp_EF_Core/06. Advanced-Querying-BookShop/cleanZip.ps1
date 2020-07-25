@@ -1,0 +1,1 @@
+cleanBinObjRecursive.ps1 && rm a.zip && zip -rq a.zip BookShop*
