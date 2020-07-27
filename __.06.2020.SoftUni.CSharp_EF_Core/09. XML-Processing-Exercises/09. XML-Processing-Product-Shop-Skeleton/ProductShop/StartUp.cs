@@ -22,65 +22,59 @@ namespace ProductShop
             ctx.Database.EnsureCreated();
 
             //Import
-            Console.WriteLine(ImportUsers(ctx, null));
-            Console.WriteLine(ImportProducts(ctx, null));
-            Console.WriteLine(ImportCategories(ctx, null));
+            Console.WriteLine(ImportUsers(ctx,
+                File.ReadAllText($"../../../Datasets/users.xml")));
+            Console.WriteLine(ImportProducts(ctx,
+                File.ReadAllText($"../../../Datasets/products.xml")));
+            Console.WriteLine(ImportCategories(ctx,
+                File.ReadAllText($"../../../Datasets/categories.xml")));
+            Console.WriteLine(ImportCategoryProducts(ctx,
+                File.ReadAllText($"../../../Datasets/categories-products.xml")));
         }
 
         //s1.
         public static string ImportUsers(ProductShopContext context, string inputXml)
-            => ImportBulkDataFromXml<User>(context, inputXml, "users.xml", "Users",
-                user =>
-                {
-                    if (user?.Age < 0) return false;
-                    return true;
-                });
+            => ImportBulkDataFromXml<User>(context, inputXml, ImportUsers, _ => true);
 
         //s2.
         public static string ImportProducts(ProductShopContext context, string inputXml)
-            => ImportBulkDataFromXml<Product>(context, inputXml, "products.xml", "Products",
-                product =>
-                {
-                    if (product?.Name is null) return false;
-                    if (product.Price < 0) return false;
-                    if (!context.Users.Any(u => u.Id.Equals(product.SellerId))) return false;
-                    if (product.BuyerId != null)
-                        if (!context.Users.Any(u => u.Id.Equals(product.BuyerId)))
-                            return false;
-                    return true;
-                });
+            => ImportBulkDataFromXml<Product>(context, inputXml, ImportProducts, _ => true);
 
         //s3.
         public static string ImportCategories(ProductShopContext context, string inputXml)
-            => ImportBulkDataFromXml<Category>(context, inputXml, "categories.xml", "Categories",
-                _ => true);
+            => ImportBulkDataFromXml<Category>(context, inputXml, ImportCategories, _ => true);
 
-        private static string ImportBulkDataFromXml<T>(
+        //s4.
+        public static string ImportCategoryProducts(ProductShopContext context, string inputXml)
+            => ImportBulkDataFromXml<CategoryProduct>(context, inputXml, ImportCategoryProducts,
+                x => context.Categories.Any(c => c.Id == x.CategoryId) &&
+                     context.Products.Any(p => p.Id == x.ProductId));
+
+        public static string ImportBulkDataFromXml<T>(
             ProductShopContext context,
             string inputXml,
-            string filename,
-            string rootAttribute,
-            Predicate<T> predicate
-        )
-            where T : class, new()
+            Func<ProductShopContext, string, string> func,
+            Predicate<T> predicate,
+            string rootElement = null
+        ) where T : class, new()
         {
-            var serializer = new XmlSerializer(typeof(T[]), new XmlRootAttribute(rootAttribute));
-            var entities = (serializer
-                        .Deserialize(
-                            inputXml is null
-                                ? (TextReader) new StreamReader($"../../../Datasets/{filename}")
-                                : new StringReader(inputXml))
-                    as T[])
-                .Where(x => predicate(x)).
-                ToList();
-
-            foreach (var entity in entities)
-            {
-                context.Add<T>(entity);
-            }
-            
+            var tableName = context
+                .GetType()
+                .GetProperties()
+                .FirstOrDefault(x
+                    => x
+                        .PropertyType
+                        .GenericTypeArguments
+                        .FirstOrDefault(gta => gta.Name == typeof(T).Name) != null)
+                ?.Name;
+            var serializer = new XmlSerializer(typeof(T[]), new XmlRootAttribute(rootElement ?? tableName));
+            var entities = (serializer.Deserialize(new StringReader(inputXml)) as T[])
+                .Where(x => predicate(x))
+                .ToArray();
+            var table = context.GetType().GetProperty(tableName).GetValue(context) as DbSet<T>;
+            table.AddRange(entities);
             context.SaveChanges();
-            return $"Successfully imported {entities.Count}";
+            return $"Successfully imported {entities.Length}";
         }
     }
 }
