@@ -1,4 +1,6 @@
-﻿namespace CarDealer.Models
+﻿using System.Xml.Serialization;
+
+namespace CarDealer.Models
 {
     using System.Collections.Generic;
 
@@ -9,16 +11,11 @@
             this.PartCars = new HashSet<PartCar>();
         }
 
-        public int Id { get; set; }
-
-        public string Make { get; set; }
-
-        public string Model { get; set; }
-
-        public long TravelledDistance { get; set; }
-
-        public ICollection<Sale> Sales { get; set; }
-		
-        public ICollection<PartCar> PartCars { get; set; }
+        [XmlElement("id")] public int Id { get; set; }
+        [XmlElement("make")] public string Make { get; set; }
+        [XmlElement("model")] public string Model { get; set; }
+        [XmlElement("travelledDistance")] public long TravelledDistance { get; set; }
+        [XmlIgnore] public ICollection<Sale> Sales { get; set; }
+        [XmlIgnore] public ICollection<PartCar> PartCars { get; set; }
     }
 }
