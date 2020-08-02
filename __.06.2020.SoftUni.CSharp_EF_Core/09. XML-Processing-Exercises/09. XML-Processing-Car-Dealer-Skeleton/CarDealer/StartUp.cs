@@ -273,8 +273,6 @@ namespace CarDealer
             xmlns.Add("", "");
             xmls.Serialize(xmlw, data, xmlns);
             var xml = sw.ToString();
-            xmlw.Close();
-            sw.Close();
             return xml;
         }
 
