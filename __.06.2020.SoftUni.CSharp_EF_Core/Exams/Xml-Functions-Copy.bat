@@ -1,0 +1,1 @@
+clip < ./FromXmlTo-And-ToXml-Functions.cs

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
+using MusicHub.DataProcessor.ExportDtos;
 using Newtonsoft.Json;
 using Formatting = Newtonsoft.Json.Formatting;
 
@@ -42,22 +43,12 @@ namespace MusicHub.DataProcessor
                         .OrderByDescending(s => s.SongName)
                         .ThenBy(s => s.Writer)
                         .ToArray(),
-                    AlbumPrice = a.Songs.Sum(s => s.Price).ToString("f2")
+                    AlbumPrice = a.Price.ToString("f2")
                 })
                 .OrderByDescending(a => a.AlbumPrice)
                 .ToArray();
 
             return JsonConvert.SerializeObject(albums, Formatting.Indented);
-        }
-
-        [XmlType("Song")]
-        public class SongAboveDurationDto
-        {
-            public string Name { get; set; }
-            public string Performer { get; set; }
-            public string Writer { get; set; }
-            public string AlbumProducer { get; set; }
-            public string Duration { get; set; }
         }
 
         public static string ExportSongsAboveDuration(MusicHubDbContext context, int duration)

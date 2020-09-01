@@ -41,8 +41,7 @@ namespace TeisterMask.DataProcessor.ImportDto
     public class ProjectImportProjectDto
     {
         [XmlElement("Name"),
-         MinLength(2),
-         MaxLength(40),
+         MinLength(2), MaxLength(40),
          Required]
         public string Name { get; set; }
 

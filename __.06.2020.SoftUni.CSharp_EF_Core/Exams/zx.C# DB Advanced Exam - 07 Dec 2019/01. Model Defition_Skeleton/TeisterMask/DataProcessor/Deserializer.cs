@@ -40,19 +40,22 @@ namespace TeisterMask.DataProcessor
                     continue;
                 }
 
-                bool hasInvalidOpenDate = !DateTime.TryParseExact(
+                bool hasInvalidOpenDate = !DateTimeTryParseExact(
                     projectDto.OpenDate,
                     "dd/MM/yyyy",
-                    CultureInfo.InvariantCulture,
-                    DateTimeStyles.None,
                     out var projectOpenDate);
+                if (hasInvalidOpenDate)
+                {
+                    sb.AppendLine(ErrorMessage);
+                    continue;
+                }
 
                 DateTime? projectDueDate = null;
                 if (!string.IsNullOrWhiteSpace(projectDto.DueDate))
                 {
-                    if (!DateTime.TryParseExact(projectDto.DueDate, "dd/MM/yyyy",
-                        CultureInfo.InvariantCulture,
-                        DateTimeStyles.None,
+                    if (!DateTimeTryParseExact(
+                        projectDto.DueDate,
+                        "dd/MM/yyyy",
                         out var projectDueDateValue
                     ))
                     {
@@ -61,13 +64,6 @@ namespace TeisterMask.DataProcessor
                     }
 
                     projectDueDate = projectDueDateValue;
-                }
-
-                if (hasInvalidOpenDate ||
-                    projectDueDate != null && projectDueDate < projectOpenDate)
-                {
-                    sb.AppendLine(ErrorMessage);
-                    continue;
                 }
 
                 var project = new Project();
@@ -83,27 +79,31 @@ namespace TeisterMask.DataProcessor
                         continue;
                     }
 
-                    bool hasInvalidTaskOpenDate = !DateTime.TryParseExact(
+                    bool hasInvalidTaskOpenDate = !DateTimeTryParseExact(
                         taskDto.OpenDate,
                         "dd/MM/yyyy",
-                        CultureInfo.InvariantCulture,
-                        DateTimeStyles.None,
                         out var taskOpenDate
                     );
+                    if (hasInvalidTaskOpenDate)
+                    {
+                        sb.AppendLine(ErrorMessage);
+                        continue;
+                    }
 
-                    bool hasInvalidTaskDueDate = !DateTime.TryParseExact(
+                    
+                    bool hasInvalidTaskDueDate = !DateTimeTryParseExact(
                         taskDto.DueDate,
                         "dd/MM/yyyy",
-                        CultureInfo.InvariantCulture,
-                        DateTimeStyles.None,
                         out var taskDueDate
                     );
+                    if (hasInvalidTaskDueDate)
+                    {
+                        sb.AppendLine(ErrorMessage);
+                        continue;
+                    }
 
-                    if (hasInvalidTaskOpenDate ||
-                        hasInvalidTaskDueDate ||
-                        taskOpenDate < project.OpenDate ||
-                        project.DueDate.HasValue && taskDueDate > project.DueDate
-                        /*taskOpenDate > taskDueDate*/)
+                    if (taskOpenDate < project.OpenDate ||
+                        project.DueDate.HasValue && taskDueDate > project.DueDate)
                     {
                         sb.AppendLine(ErrorMessage);
                         continue;
@@ -115,13 +115,12 @@ namespace TeisterMask.DataProcessor
                     task.DueDate = taskDueDate;
                     task.ExecutionType = (ExecutionType) taskDto.ExecutionType;
                     task.LabelType = (LabelType) taskDto.LabelType;
-                    // task.Project = project;
 
                     project.Tasks.Add(task);
                 }
 
                 validProjects.Add(project);
-                
+
                 sb.AppendLine(string.Format(
                     SuccessfullyImportedProject,
                     project.Name,
@@ -131,10 +130,19 @@ namespace TeisterMask.DataProcessor
 
             context.Projects.AddRange(validProjects);
             context.SaveChanges();
-            
+
             return sb.ToString();
         }
 
+        private static bool DateTimeTryParseExact(string datetime, string format, out DateTime result)
+        => DateTime.TryParseExact(
+                datetime,
+                format,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.None,
+                out result
+            );
+        
         private static T FromXmlTo<T>(string xmlString, string rootElement = null)
             where T : class
         {
@@ -175,14 +183,13 @@ namespace TeisterMask.DataProcessor
                     }
 
                     var employeeTask = new EmployeeTask();
-                    employeeTask.EmployeeId = employee.Id;
                     employeeTask.TaskId = jsonTask;
 
                     employee.EmployeesTasks.Add(employeeTask);
                 }
 
                 validEmployees.Add(employee);
-                
+
                 sb.AppendLine(string.Format(
                     SuccessfullyImportedEmployee,
                     employee.Username,
@@ -192,7 +199,7 @@ namespace TeisterMask.DataProcessor
 
             context.Employees.AddRange(validEmployees);
             context.SaveChanges();
-            
+
             return sb.ToString();
         }
 

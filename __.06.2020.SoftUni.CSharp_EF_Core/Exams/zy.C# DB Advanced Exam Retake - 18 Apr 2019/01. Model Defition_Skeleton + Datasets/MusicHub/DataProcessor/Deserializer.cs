@@ -67,6 +67,7 @@ namespace MusicHub.DataProcessor
                 .DeserializeObject<ProducerImportDto[]>(jsonString);
 
             var sb = new StringBuilder();
+            var validProducers = new List<Producer>();
             foreach (var jsonProducer in jsonProducers)
             {
                 if (!IsValid(jsonProducer))
@@ -113,17 +114,9 @@ namespace MusicHub.DataProcessor
                 producer.Name = jsonProducer.Name;
                 producer.Pseudonym = jsonProducer.Pseudonym;
                 producer.PhoneNumber = jsonProducer.PhoneNumber;
-
-                context.Producers.Add(producer);
-                context.SaveChanges();
-
-                validAlbums.ForEach(a =>
-                {
-                    a.ProducerId = producer.Id;
-                });
+                producer.Albums = validAlbums;
                 
-                context.Albums.AddRange(validAlbums);
-                context.SaveChanges();
+                validProducers.Add(producer);
 
                 if (!string.IsNullOrWhiteSpace(producer.PhoneNumber))
                     sb.AppendLine(string.Format(
@@ -138,6 +131,9 @@ namespace MusicHub.DataProcessor
                         validAlbums.Count));
             }
 
+            context.Producers.AddRange(validProducers);
+            context.SaveChanges();
+            
             return sb.ToString();
         }
 
@@ -178,14 +174,26 @@ namespace MusicHub.DataProcessor
                         xmlSong.Genre,
                         out var songGenre);
 
-                bool hasInvalidAlbumId =
-                    !int.TryParse(xmlSong.AlbumId,
-                        out var albumId);
-                int? songAlbumId = hasInvalidAlbumId ? (int?) null : albumId;
-                if (!hasInvalidAlbumId)
+                int? songAlbumId = null;
+                if (!string.IsNullOrWhiteSpace(xmlSong.AlbumId))
                 {
-                    hasInvalidAlbumId = !context.Albums
-                        .Any(a => a.Id == songAlbumId);
+                    bool hasInvalidAlbumId =
+                        !int.TryParse(xmlSong.AlbumId,
+                            out var songAlbumIdValue);
+
+                    if (hasInvalidAlbumId)
+                    {
+                        sb.AppendLine(ErrorMessage);
+                        continue;
+                    }
+                    
+                    songAlbumId = songAlbumIdValue;
+                    if (!context.Albums
+                        .Any(a => a.Id == songAlbumId))
+                    {
+                        sb.AppendLine(ErrorMessage);
+                        continue;
+                    }
                 }
 
                 bool hasInvalidWriter = !context.Writers
@@ -194,7 +202,6 @@ namespace MusicHub.DataProcessor
                 if (hasInvalidDuration ||
                     hasInvalidCreatedOn ||
                     hasInvalidGenre ||
-                    hasInvalidAlbumId ||
                     hasInvalidWriter)
                 {
                     sb.AppendLine(ErrorMessage);
@@ -232,6 +239,7 @@ namespace MusicHub.DataProcessor
                 );
 
             var sb = new StringBuilder();
+            var validPerformers = new List<Performer>();
             foreach (var xmlPerformer in xmlPerformers)
             {
                 if (!IsValid(xmlPerformer))
@@ -267,29 +275,24 @@ namespace MusicHub.DataProcessor
                 performer.Age = xmlPerformer.Age;
                 performer.NetWorth = xmlPerformer.NetWorth;
 
-                context.Performers.Add(performer);
-                context.SaveChanges();
-
-                var songs = xmlPerformer.PerformersSongs.Collection
+                performer.PerformerSongs = xmlPerformer.PerformersSongs.Collection
                     .Select(s => new SongPerformer
                     {
-                        PerformerId = performer.Id,
                         SongId = s.Id
                     })
                     .ToArray();
-
-                context.SongsPerformers.AddRange(songs);
-                context.SaveChanges();
 
                 sb.AppendLine(
                     string.Format(
                         SuccessfullyImportedPerformer,
                         performer.FirstName,
-                        songs.Length
-                    )
-                );
+                        performer.PerformerSongs.Count));
+                validPerformers.Add(performer);
             }
 
+            context.Performers.AddRange(validPerformers);
+            context.SaveChanges();
+            
             return sb.ToString();
         }
 
