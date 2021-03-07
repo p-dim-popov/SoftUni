@@ -1,0 +1,10 @@
+.navigation {
+    width: 100%;
+    height: 14vh;
+    background-color: dodgerblue;
+    color: white;
+    position: fixed;
+    top: 0;
+    border-bottom: 2px solid yellowgreen;
+    border-top: 2px solid yellow;
+}

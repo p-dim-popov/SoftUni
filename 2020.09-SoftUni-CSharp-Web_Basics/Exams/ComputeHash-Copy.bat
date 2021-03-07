@@ -1,0 +1,1 @@
+clip < ./ComputeHash.cs
